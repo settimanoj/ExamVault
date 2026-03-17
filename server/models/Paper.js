@@ -15,7 +15,10 @@ const paperSchema = new mongoose.Schema(
     },
     slot: {
       type: String,
-      required: [true, 'Slot is required'],
+      required: [
+        function() { return this.category !== 'PYQ'; },
+        'Slot is required for Recent Papers'
+      ],
       trim: true,
       uppercase: true,
     },

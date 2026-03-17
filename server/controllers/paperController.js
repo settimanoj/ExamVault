@@ -109,7 +109,10 @@ const uploadPaper = async (req, res) => {
 
     const { courseName, courseCode, slot, examType, category } = req.body;
 
-    if (!courseName || !courseCode || !slot || !examType || !category) {
+    const isPyq = category === 'PYQ';
+    const missingSlot = !isPyq && !slot;
+
+    if (!courseName || !courseCode || missingSlot || !examType || !category) {
       // Remove uploaded file from cloudinary if validation fails
       await deletePaperFromCloudinary({
         publicId: req.file.filename,
@@ -126,7 +129,7 @@ const uploadPaper = async (req, res) => {
     const paper = new Paper({
       courseName: courseName.trim(),
       courseCode: courseCode.trim().toUpperCase(),
-      slot: slot.trim().toUpperCase(),
+      slot: slot ? slot.trim().toUpperCase() : '',
       examType,
       category,
       fileUrl: req.file.path,

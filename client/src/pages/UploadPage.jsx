@@ -5,7 +5,10 @@ import { useAuth } from '../context/AuthContext'
 import { PDFDocument } from 'pdf-lib'
 
 const EXAM_TYPES = ['CAT1', 'CAT2', 'FAT', 'Others']
-const CATEGORIES = ['Slot Paper', 'PYQ']
+const CATEGORIES = [
+  { label: 'Recent Paper', value: 'Slot Paper' },
+  { label: 'PYQ', value: 'PYQ' }
+]
 const ALLOWED_TYPES = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png']
 const ALLOWED_EXTS = ['.pdf', '.jpg', '.jpeg', '.png']
 
@@ -29,7 +32,7 @@ export default function UploadPage() {
     const errs = {}
     if (!form.courseName.trim()) errs.courseName = 'Course name is required'
     if (!form.courseCode.trim()) errs.courseCode = 'Course code is required'
-    if (!form.slot.trim()) errs.slot = 'Slot is required'
+    if (form.category !== 'PYQ' && !form.slot.trim()) errs.slot = 'Slot is required'
     if (!form.examType) errs.examType = 'Exam type is required'
     if (!form.category) errs.category = 'Category is required'
 
@@ -44,11 +47,6 @@ export default function UploadPage() {
       const tooLarge = files.find((f) => f.size > 20 * 1024 * 1024)
       if (tooLarge) {
         errs.file = 'Each file must be under 20 MB'
-      }
-
-      const hasPdf = files.some((f) => f.type === 'application/pdf')
-      if (files.length > 1 && hasPdf) {
-        errs.file = 'Multi-page upload supports multiple images. Upload a single PDF or multiple images.'
       }
     }
     return errs
@@ -100,18 +98,24 @@ export default function UploadPage() {
       const bytes = await file.arrayBuffer()
       const mime = file.type
 
-      let embedded
-      if (mime === 'image/jpeg' || mime === 'image/jpg') {
-        embedded = await pdfDoc.embedJpg(bytes)
-      } else if (mime === 'image/png') {
-        embedded = await pdfDoc.embedPng(bytes)
+      if (mime === 'application/pdf') {
+        const sourcePdf = await PDFDocument.load(bytes)
+        const copiedPages = await pdfDoc.copyPages(sourcePdf, sourcePdf.getPageIndices())
+        copiedPages.forEach((page) => pdfDoc.addPage(page))
       } else {
-        continue
-      }
+        let embedded
+        if (mime === 'image/jpeg' || mime === 'image/jpg') {
+          embedded = await pdfDoc.embedJpg(bytes)
+        } else if (mime === 'image/png') {
+          embedded = await pdfDoc.embedPng(bytes)
+        } else {
+          continue
+        }
 
-      const { width, height } = embedded
-      const page = pdfDoc.addPage([width, height])
-      page.drawImage(embedded, { x: 0, y: 0, width, height })
+        const { width, height } = embedded
+        const page = pdfDoc.addPage([width, height])
+        page.drawImage(embedded, { x: 0, y: 0, width, height })
+      }
     }
 
     const pdfBytes = await pdfDoc.save()
@@ -177,6 +181,26 @@ export default function UploadPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="card p-6 sm:p-8 space-y-5" noValidate>
+          {/* Category - First Field */}
+          <div>
+            <label className="label" htmlFor="category">Paper Category</label>
+            <select
+              id="category"
+              name="category"
+              value={form.category}
+              onChange={handleChange}
+              className={`input-field ${errors.category ? 'border-red-500/70 focus:ring-red-500/40' : ''}`}
+            >
+              <option value="">Select category</option>
+              {CATEGORIES.map((c) => (
+                <option key={c.value} value={c.value}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
+            {errors.category && <p className="text-red-400 text-xs mt-1">{errors.category}</p>}
+          </div>
+
           {/* Course Name */}
           <div>
             <label className="label" htmlFor="courseName">Course Name</label>
@@ -192,7 +216,7 @@ export default function UploadPage() {
             {errors.courseName && <p className="text-red-400 text-xs mt-1">{errors.courseName}</p>}
           </div>
 
-          {/* Course Code + Slot row */}
+          {/* Course Code + conditionally Slot row */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="label" htmlFor="courseCode">Course Code</label>
@@ -207,54 +231,40 @@ export default function UploadPage() {
               />
               {errors.courseCode && <p className="text-red-400 text-xs mt-1">{errors.courseCode}</p>}
             </div>
-            <div>
-              <label className="label" htmlFor="slot">Slot</label>
-              <select
-                id="slot"
-                name="slot"
-                value={form.slot}
-                onChange={handleChange}
-                className={`input-field ${errors.slot ? 'border-red-500/70 focus:ring-red-500/40' : ''}`}
-              >
-                <option value="">Select slot</option>
-                {['A1','A2','B1','B2','C1','C2','D1','D2','E1','E2','F1','F2','G1','G2'].map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
-              {errors.slot && <p className="text-red-400 text-xs mt-1">{errors.slot}</p>}
-            </div>
+            {form.category !== 'PYQ' && (
+              <div>
+                <label className="label" htmlFor="slot">Slot</label>
+                <select
+                  id="slot"
+                  name="slot"
+                  value={form.slot}
+                  onChange={handleChange}
+                  className={`input-field ${errors.slot ? 'border-red-500/70 focus:ring-red-500/40' : ''}`}
+                >
+                  <option value="">Select slot</option>
+                  {['A1','A2','B1','B2','C1','C2','D1','D2','E1','E2','F1','F2','G1','G2'].map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+                {errors.slot && <p className="text-red-400 text-xs mt-1">{errors.slot}</p>}
+              </div>
+            )}
           </div>
 
-          {/* Exam Type + Category row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="label" htmlFor="examType">Exam Type</label>
-              <select
-                id="examType"
-                name="examType"
-                value={form.examType}
-                onChange={handleChange}
-                className={`input-field ${errors.examType ? 'border-red-500/70 focus:ring-red-500/40' : ''}`}
-              >
-                <option value="">Select exam type</option>
-                {EXAM_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-              </select>
-              {errors.examType && <p className="text-red-400 text-xs mt-1">{errors.examType}</p>}
-            </div>
-            <div>
-              <label className="label" htmlFor="category">Paper Category</label>
-              <select
-                id="category"
-                name="category"
-                value={form.category}
-                onChange={handleChange}
-                className={`input-field ${errors.category ? 'border-red-500/70 focus:ring-red-500/40' : ''}`}
-              >
-                <option value="">Select category</option>
-                {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-              </select>
-              {errors.category && <p className="text-red-400 text-xs mt-1">{errors.category}</p>}
-            </div>
+          {/* Exam Type row */}
+          <div>
+            <label className="label" htmlFor="examType">Exam Type</label>
+            <select
+              id="examType"
+              name="examType"
+              value={form.examType}
+              onChange={handleChange}
+              className={`input-field ${errors.examType ? 'border-red-500/70 focus:ring-red-500/40' : ''}`}
+            >
+              <option value="">Select exam type</option>
+              {EXAM_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+            </select>
+            {errors.examType && <p className="text-red-400 text-xs mt-1">{errors.examType}</p>}
           </div>
 
           {/* File Upload */}
@@ -287,8 +297,8 @@ export default function UploadPage() {
               {files.length ? (
                 <div className="space-y-3 text-left">
                   <p className="text-xs text-primary-200">
-                    Multi-page upload enabled — selected files will be merged into a single PDF in
-                    the order shown below.
+                    Multi-file upload enabled — selected files (PDFs and images) will be merged
+                    into a single PDF in the order shown below.
                   </p>
                   <ul className="space-y-2 max-h-40 overflow-auto pr-1">
                     {files.map((f, index) => (
@@ -333,8 +343,8 @@ export default function UploadPage() {
                       Drop files here, or <span className="text-primary-400">browse</span>
                     </p>
                     <p className="text-gray-500 text-xs mt-1">
-                      PDF, JPG, JPEG, PNG — up to 20 MB each. Multiple images will be merged into a
-                      single PDF.
+                      PDF, JPG, JPEG, PNG — up to 20 MB each. PDFs and images will be merged into
+                      a single PDF.
                     </p>
                   </div>
                 </div>
