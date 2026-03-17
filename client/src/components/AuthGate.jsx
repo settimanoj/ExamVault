@@ -3,6 +3,8 @@ import { useEffect, useRef } from 'react'
 import toast from 'react-hot-toast'
 import { useAuth } from '../context/AuthContext'
 
+const SUPPRESS_AUTH_TOAST_KEY = 'examvault_suppress_auth_toast'
+
 function LoadingState() {
   return (
     <div className="page-container">
@@ -28,7 +30,14 @@ export default function AuthGate({ children, requireAdmin = false }) {
     if (loading || hasShownMessageRef.current) return
 
     if (!isAuthenticated) {
-      toast.error('Please sign in to access this feature.')
+      const shouldSuppressToast = sessionStorage.getItem(SUPPRESS_AUTH_TOAST_KEY) === 'true'
+
+      if (shouldSuppressToast) {
+        sessionStorage.removeItem(SUPPRESS_AUTH_TOAST_KEY)
+      } else {
+        toast.error('Please sign in to access this feature.')
+      }
+
       hasShownMessageRef.current = true
     } else if (requireAdmin && !isAdmin) {
       toast.error('Admin privileges required to view this page.')

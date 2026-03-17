@@ -8,6 +8,7 @@ import {
 } from '../services/api'
 
 const AUTH_STORAGE_KEY = 'examvault_auth_token'
+const SUPPRESS_AUTH_TOAST_KEY = 'examvault_suppress_auth_toast'
 
 const AuthContext = createContext(null)
 
@@ -63,6 +64,7 @@ export function AuthProvider({ children }) {
   }
 
   const logout = () => {
+    sessionStorage.setItem(SUPPRESS_AUTH_TOAST_KEY, 'true')
     localStorage.removeItem(AUTH_STORAGE_KEY)
     setToken(null)
     setUser(null)
