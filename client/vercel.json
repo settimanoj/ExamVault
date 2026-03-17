@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://examvault-backend-7jec.onrender.com"
+      "destination": "https://examvault-backend-7jec.onrender.com/api/:path*"
     }
   ]
 }
