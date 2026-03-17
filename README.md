@@ -98,6 +98,9 @@ CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
 CLIENT_URL=http://localhost:5173
+GOOGLE_CLIENT_ID=your_google_oauth_client_id.apps.googleusercontent.com
+JWT_SECRET=replace_with_a_long_random_secret
+ADMIN_EMAILS=yourname@vitapstudent.ac.in
 ```
 
 Start the server:
@@ -180,6 +183,8 @@ CGPA = Σ(semester_credits_i × GPA_i) / Σ(semester_credits_i)
 3. Set **Build Command**: `npm install`
 4. Set **Start Command**: `node index.js`
 5. Add all env variables from `.env`
+6. Set `CLIENT_URL` to your deployed frontend URL, for example `https://exam-vault-nu.vercel.app`
+7. Set `ADMIN_EMAILS` to a comma-separated list of emails that should have admin access
 
 ### Vercel (Frontend)
 

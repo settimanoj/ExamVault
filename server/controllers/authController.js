@@ -3,6 +3,14 @@ const User = require('../models/User');
 const { generateToken } = require('../utils/jwt');
 
 const allowedDomain = (process.env.ALLOWED_GOOGLE_DOMAIN || 'vitapstudent.ac.in').toLowerCase();
+const adminEmails = new Set(
+  (process.env.ADMIN_EMAILS || '')
+    .split(',')
+    .map((email) => email.trim().toLowerCase())
+    .filter(Boolean)
+);
+
+const getRoleForEmail = (email) => (adminEmails.has(email) ? 'admin' : 'user');
 
 const sanitizeUser = (user) => ({
   id: user._id,
@@ -66,17 +74,20 @@ const googleLogin = async (req, res) => {
     }
 
     let user = await User.findOne({ email });
+    const role = getRoleForEmail(email);
 
     if (user) {
       user.googleId = payload.sub;
       user.name = payload.name || user.name;
       user.profilePicture = payload.picture || user.profilePicture;
+      user.role = role;
     } else {
       user = new User({
         googleId: payload.sub,
         name: payload.name,
         email,
         profilePicture: payload.picture || '',
+        role,
       });
     }
 
