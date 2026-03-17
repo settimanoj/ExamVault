@@ -239,24 +239,14 @@ function CGPACalculator() {
         <h2 className="text-2xl font-bold text-white flex items-center gap-2">
           <Target className="w-6 h-6 text-primary-400" /> CGPA Calculator
         </h2>
-        <p className="text-gray-400 text-sm mt-1">Cumulative CGPA across all semesters</p>
+        <p className="text-gray-400 text-sm mt-1">CGPA across all semesters</p>
         <p className="text-[11px] text-amber-300/80 mt-1 flex items-center gap-1.5">
           <AlertTriangle className="w-3.5 h-3.5" />
           Exclude Pass/Fail (P/F) courses. Do not add their credits to the semester total.
         </p>
       </div>
 
-      {/* Grade mapping reference */}
-      <div className="bg-gray-800/50 rounded-xl p-3">
-        <p className="text-xs text-gray-500 mb-2 font-semibold uppercase tracking-wide">Grade → Points Reference</p>
-        <div className="flex flex-wrap gap-2">
-          {gradeOptions.map((g) => (
-            <span key={g} className="badge bg-gray-700/80 text-gray-300 gap-1">
-              {g} = {gradePoints[g]}
-            </span>
-          ))}
-        </div>
-      </div>
+
 
       {/* Header row */}
       <div className="grid grid-cols-[1fr_1fr_40px] gap-3 text-xs font-semibold text-gray-500 uppercase tracking-wide px-1">
@@ -328,7 +318,7 @@ function CGPACalculator() {
       {/* Result */}
       {result && (
         <div className="bg-primary-900/20 border border-primary-700/40 rounded-2xl px-6 py-5 text-center animate-fade-in">
-          <p className="text-gray-400 text-sm mb-1">Your Cumulative CGPA</p>
+          <p className="text-gray-400 text-sm mb-1">Your CGPA</p>
           <p className="text-5xl font-extrabold gradient-text">{result.cgpa}</p>
           <p className="text-gray-500 text-xs mt-2">
             Across {result.semesters} semester{result.semesters > 1 ? 's' : ''} · {result.totalCredits} total credits
@@ -360,7 +350,7 @@ export default function CalculatorPage() {
       <div className="mb-8">
         <h1 className="section-title mb-2">GPA & CGPA Calculator</h1>
         <p className="section-subtitle text-base">
-          Calculate your semester GPA and cumulative CGPA using VIT-AP's grading system.
+          Calculate your semester GPA and CGPA using VIT-AP's grading system.
         </p>
       </div>
 

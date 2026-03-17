@@ -32,7 +32,7 @@ const features = [
   {
     icon: Calculator,
     title: 'GPA & CGPA Calculator',
-    description: 'Calculate your semester GPA and cumulative CGPA easily with grade mapping.',
+    description: 'Calculate your semester GPA and CGPA easily with grade mapping.',
     to: '/calculator',
     cta: 'Calculate Now',
     colorClass: 'from-orange-600/20 to-orange-900/10 border-orange-700/30',
