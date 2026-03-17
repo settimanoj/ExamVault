@@ -1,5 +1,5 @@
-import { Navigate, useLocation } from 'react-router-dom'
 import { useEffect, useRef } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { useAuth } from '../context/AuthContext'
 
@@ -20,14 +20,16 @@ function LoadingState() {
 export default function AuthGate({ children, requireAdmin = false }) {
   const { loading, isAuthenticated, isAdmin } = useAuth()
   const location = useLocation()
+  const navigate = useNavigate()
   const hasShownMessageRef = useRef(false)
+  const hasRedirectedRef = useRef(false)
 
   if (loading) {
     return <LoadingState />
   }
 
   useEffect(() => {
-    if (loading || hasShownMessageRef.current) return
+    if (loading || hasRedirectedRef.current) return
 
     if (!isAuthenticated) {
       const shouldSuppressToast = sessionStorage.getItem(SUPPRESS_AUTH_TOAST_KEY) === 'true'
@@ -39,18 +41,18 @@ export default function AuthGate({ children, requireAdmin = false }) {
       }
 
       hasShownMessageRef.current = true
+      hasRedirectedRef.current = true
+      navigate('/', { replace: true, state: { from: location } })
     } else if (requireAdmin && !isAdmin) {
       toast.error('Admin privileges required to view this page.')
       hasShownMessageRef.current = true
+      hasRedirectedRef.current = true
+      navigate('/dashboard', { replace: true, state: { from: location } })
     }
-  }, [loading, isAuthenticated, requireAdmin, isAdmin])
+  }, [loading, isAuthenticated, requireAdmin, isAdmin, location, navigate])
 
-  if (!isAuthenticated) {
-    return <Navigate to="/" replace state={{ from: location }} />
-  }
-
-  if (requireAdmin && !isAdmin) {
-    return <Navigate to="/dashboard" replace state={{ from: location }} />
+  if (!isAuthenticated || (requireAdmin && !isAdmin)) {
+    return <LoadingState />
   }
 
   return children
